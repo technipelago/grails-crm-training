@@ -4,6 +4,7 @@ import grails.events.Listener
 import grails.plugins.crm.core.SearchUtils
 import grails.plugins.crm.core.TenantUtils
 import grails.plugins.crm.task.CrmTask
+import grails.plugins.crm.task.CrmTaskAttender
 import org.apache.commons.lang.StringUtils
 import org.codehaus.groovy.grails.web.metaclass.BindDynamicMethod
 
@@ -149,6 +150,10 @@ class CrmTrainingService {
         return m
     }
 
+    CrmTask getTrainingEvent(String number) {
+        CrmTask.findByNumberAndTenantId(number, TenantUtils.tenant)
+    }
+
     CrmTask createTrainingEvent(Map params, boolean save = false) {
         if(params.training) {
             params.reference = params.training
@@ -163,5 +168,10 @@ class CrmTrainingService {
             query.referenceType = CrmTraining.class
         }
         crmTaskService.list(query, params)
+    }
+
+    CrmTaskAttender addAttender(CrmTask task, Map params) {
+        def contactInfo = crmTaskService.createContactInformation(params)
+        crmTaskService.addAttender(task, contactInfo, params.status, params.notes ?: (params.description ?: params.msg))
     }
 }
