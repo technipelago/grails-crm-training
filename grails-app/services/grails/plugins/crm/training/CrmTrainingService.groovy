@@ -1,12 +1,31 @@
+/*
+ * Copyright (c) 2014 Goran Ehrsson.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package grails.plugins.crm.training
 
 import grails.events.Listener
 import grails.plugins.crm.core.SearchUtils
 import grails.plugins.crm.core.TenantUtils
+import grails.plugins.crm.core.DateUtils
+import grails.plugins.crm.core.PagedResultList
 import grails.plugins.crm.task.CrmTask
 import grails.plugins.crm.task.CrmTaskAttender
 import org.apache.commons.lang.StringUtils
 import org.codehaus.groovy.grails.web.metaclass.BindDynamicMethod
+import grails.plugins.selection.Selectable
 
 /**
  * Training services.
@@ -50,6 +69,7 @@ class CrmTrainingService {
      * @param params pagination parameters
      * @return List of CrmTraining domain instances
      */
+    @Selectable
     def list(Map params = [:]) {
         listTrainings([:], params)
     }
@@ -61,6 +81,7 @@ class CrmTrainingService {
      * @param params pagination parameters
      * @return List of CrmTraining domain instances
      */
+    @Selectable
     def list(Map query, Map params) {
         listTrainings(query, params)
     }
@@ -73,15 +94,40 @@ class CrmTrainingService {
      * @return List of CrmTraining domain instances
      */
     def listTrainings(Map query, Map params) {
-        def tagged
+        def ids = [] as Set
+
         if (query.tags) {
-            tagged = crmTagService.findAllIdByTag(CrmTraining, query.tags) ?: [0L]
+            def tmp = crmTagService.findAllIdByTag(CrmTraining, query.tags)
+            if(tmp) {
+                ids.addAll(tmp)
+            } else {
+                return new PagedResultList([])
+            }
         }
 
+        if (query.customer) {
+            def tmp = listTrainingsForContact(query.customer)
+            if (tmp) {
+                ids.addAll(tmp.collect{Long.valueOf(it.ref.split('@')[1])})
+            } else {
+                return new PagedResultList([])
+            }
+        }
+
+        if(query.fromDate || query.toDate || query.loction) {
+            def taskQuery = params.subMap(['fromDate','toDate', 'location'])
+            taskQuery.referenceType = 'crmTraining'
+            def tmp = crmTaskService.list(taskQuery, [:])
+            if(tmp) {
+                ids.addAll(tmp.collect{Long.valueOf(it.ref.split('@')[1])})
+            } else {
+                return new PagedResultList([])
+            }
+        }
         CrmTraining.createCriteria().list(params) {
             eq('tenantId', TenantUtils.tenant)
-            if (tagged) {
-                inList('id', tagged)
+            if (ids) {
+                inList('id', ids)
             }
             if (query.number) {
                 or {
@@ -93,6 +139,14 @@ class CrmTrainingService {
                 or {
                     ilike('name', SearchUtils.wildcard(query.name))
                     ilike('displayName', SearchUtils.wildcard(query.name))
+                }
+            }
+            if (query.type) {
+                type {
+                    or {
+                        ilike('name', SearchUtils.wildcard(query.type))
+                        eq('param', SearchUtils.wildcard(query.type))
+                    }
                 }
             }
         }
@@ -155,7 +209,7 @@ class CrmTrainingService {
     }
 
     CrmTask createTrainingEvent(Map params, boolean save = false) {
-        if(params.training) {
+        if (params.training) {
             params.reference = params.training
         }
         def crmTask = crmTaskService.createTask(params, save)
@@ -164,7 +218,7 @@ class CrmTrainingService {
     }
 
     List<CrmTask> listTrainingEvents(Map query = [:], Map params = [:]) {
-        if(query.reference == null && query.ref == null) {
+        if (query.reference == null && query.ref == null) {
             query.referenceType = CrmTraining.class
         }
         crmTaskService.list(query, params)
@@ -173,5 +227,25 @@ class CrmTrainingService {
     CrmTaskAttender addAttender(CrmTask task, Map params) {
         def contactInfo = crmTaskService.createContactInformation(params)
         crmTaskService.addAttender(task, contactInfo, params.status, params.notes ?: (params.description ?: params.msg))
+    }
+
+    List<CrmTask> listTrainingsForContact(final String contactName, final String attenderStatus = null) {
+        CrmTaskAttender.createCriteria().list() {
+            projections {
+                property 'task'
+            }
+            task {
+                eq('tenantId', TenantUtils.tenant)
+                ilike('ref', 'crmTraining@%')
+            }
+            contact {
+                ilike('name', SearchUtils.wildcard(contactName))
+            }
+            if (attenderStatus) {
+                status {
+                    eq('param', attenderStatus)
+                }
+            }
+        }
     }
 }

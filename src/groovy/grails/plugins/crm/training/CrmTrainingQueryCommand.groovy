@@ -10,6 +10,7 @@ class CrmTrainingQueryCommand  implements Serializable {
     String number
     String name
     String type
+    String location
     String customer
     String fromDate
     String toDate
