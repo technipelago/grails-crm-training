@@ -49,6 +49,8 @@ class CrmTraining {
         url index: 'crm_training_url_idx'
     }
 
+    static transients = ['dao']
+
     static taggable = true
     static attachmentable = true
     static dynamicProperties = true
@@ -56,6 +58,11 @@ class CrmTraining {
     static auditable = true
 
     public static final List BIND_WHITELIST = ['number', 'name', 'description', 'url', 'type']
+
+    transient Map<String, Object> getDao() {
+        [id  : id, number: number, name: name, url: url, description: description, type: type.getDao(),
+         tags: { this.getTagValue() }]
+    }
 
     String toString() {
         name.toString()
