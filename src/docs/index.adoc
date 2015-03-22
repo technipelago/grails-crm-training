@@ -1,0 +1,89 @@
+= GR8 CRM - Course Management Plugin
+Göran Ehrsson <goran@technipelago.se>
+:description: Official documentation for the GR8 CRM Course Management Plugin
+:keywords: groovy, grails, crm, gr8crm, documentation, event, course, training, conference
+:toc:
+:numbered:
+:icons: font
+:imagesdir: ./images
+:source-highlighter: prettify
+:homepage: http://gr8crm.github.io
+:gr8crm: GR8 CRM
+:gr8source: https://github.com/technipelago/grails-crm-training
+:license: This plugin is licensed with http://www.apache.org/licenses/LICENSE-2.0.html[Apache License version 2.0]
+
+== Introduction
+
+{gr8crm} is a set of http://www.grails.org/[Grails Web Application Framework]
+plugins that makes it easy to develop web applications with CRM functionality.
+
+You can find more information about {gr8crm} on the main documentation site {homepage}.
+
+=== Customer Relationship Management
+
+Customer relationship management (CRM) is a system for managing a company’s interactions with current and future customers.
+It involves using technology to organize, automate and synchronize sales, marketing, customer service, and technical support.
+http://en.wikipedia.org/wiki/Customer_relationship_management[Wikipedia]
+
+The {gr8crm} "Ecosystem" currently contains over 40 Grails plugins. For a complete list of plugins see {homepage}.
+
+Each {gr8crm} plugin defines a http://martinfowler.com/bliki/BoundedContext.html[Bounded Context]
+that focus on one specific domain, for example *contact*, *project* or *document*.
+
+== Course Management Plugin
+
+This plugin provides services and persistence for course management in GR8 CRM applications.
+Although the plugin was originally designed for administration of course/training events it
+ended up being a very generic plugin capable of managing any type of events where people attend.
+It can be traditional training classes, seminars, small conferences or user group meetings.
+
+This is a "headless" plugin. For event management user interface see the
+https://github.com/technipelago/grails-crm-training-ui.git[crm-training-ui] plugin.
+
+== CrmTrainingService
+
++CrmTrainingService+ provides methods for course/event management.
+
+=== Create a conference event
+
+[source,groovy]
+.CreateConference.groovy
+----
+    def conferenceType = crmTrainingService.createTrainingType(name: "Conference", true) <1>
+    def gr8conf = crmTrainingService.createTraining(name: "GR8Conf EU", type: conferenceType, true) <2>
+    def taskType = crmTaskService.createTaskType(name: "Conference", true) <3>
+
+    def startDate = new GregorianCalendar(2015, Calendar.JUNE, 2, 8, 0, 0).time
+    def endDate = new GregorianCalendar(2015, Calendar.JUNE, 4, 17, 15, 0).time
+    def gr8confeu2015 = crmTaskService.createTask(number: 'GR8CONF-EU-2015', name: "GR8Conf EU", type: taskType,
+        startTime: startDate, endTime: endDate, displayDate: "June 2nd - 4th, 2015",
+        location: "IT-University, Rued Langgards Vej 7, Copenhagen, Denmark", username: 'admin', reference: gr8conf,
+        description: "GR8Conf is an independent, affordable series of conferences in Denmark and the US. It's dedicated to the technologies in the Groovy ecosystem.", true) <4>
+
+    crmTrainingService.addAttender(gr8confeu2015, [firstName: "Göran", lastName: "Ehrsson", status: "confirmed", tags: ["Speaker"]) <5>
+    crmTrainingService.addAttender(gr8confeu2015, [firstName: "Søren", lastName: "Berg Glasius", status: "confirmed", tags: ["Crew", "Speaker"]])
+    crmTrainingService.addAttender(gr8confeu2015, [firstName: "Guillaume", lastName: "Laforge", status: "confirmed", tags: ["Speaker"]])
+----
+<1> Create an event type called "Conference"
+<2> Define an event called "GR8Conf EU". This instance holds common metadata for this conference type, no dates or speakers.
+<3> An event instance is really just a +CRMTask+ instance. We create a separate task type "Conference" to separate it from other tasks in our calendar.
+<4> This creates the specific occurrence of GR8Conf EU in June 2015.
+<5> Add attenders to the conference.
+
+== Changes
+
+2.4.0:: First public release
+
+== License
+
+{license}
+
+== Source Code
+
+The source code for this plugin is available at {gr8source}
+
+== Contributing
+
+Please report {gr8source}/issues[issues or suggestions].
+
+Want to improve the plugin: Fork the {gr8source}[repository] and send a pull request.
