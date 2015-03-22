@@ -31,17 +31,24 @@ import org.codehaus.groovy.grails.web.metaclass.BindDynamicMethod
  */
 class CrmTrainingService {
 
+    def crmSecurityService
     def crmTaskService
     def crmTagService
+    def messageSource
 
     @Listener(namespace = "crmTraining", topic = "enableFeature")
     def enableFeature(event) {
         // event = [feature: feature, tenant: tenant, role:role, expires:expires]
-        def tenant = event.tenant
-        TenantUtils.withTenant(tenant) {
+        Map tenant = crmSecurityService.getTenantInfo(event.tenant)
+        Locale locale = tenant.locale ?: Locale.getDefault()
+
+        TenantUtils.withTenant(tenant.id) {
             crmTagService.createTag(name: CrmTraining.name, multiple: true)
 
             createTrainingType(name: 'Event', true)
+
+            crmTaskService.createAttenderStatus(orderIndex: 2, param: "confirm",
+                    name: messageSource.getMessage("crmTaskAttenderStatus.name.confirm", null, "Confirm*", locale), true)
         }
     }
 
@@ -98,7 +105,7 @@ class CrmTrainingService {
 
         if (query.tags) {
             def tmp = crmTagService.findAllIdByTag(CrmTraining, query.tags)
-            if(tmp) {
+            if (tmp) {
                 ids.addAll(tmp)
             } else {
                 return new PagedResultList([])
@@ -108,18 +115,18 @@ class CrmTrainingService {
         if (query.customer) {
             def tmp = listTrainingsForContact(query.customer)
             if (tmp) {
-                ids.addAll(tmp.collect{Long.valueOf(it.ref.split('@')[1])})
+                ids.addAll(tmp.collect { Long.valueOf(it.ref.split('@')[1]) })
             } else {
                 return new PagedResultList([])
             }
         }
 
-        if(query.fromDate || query.toDate || query.loction) {
-            def taskQuery = params.subMap(['fromDate','toDate', 'location'])
+        if (query.fromDate || query.toDate || query.loction) {
+            def taskQuery = params.subMap(['fromDate', 'toDate', 'location'])
             taskQuery.referenceType = 'crmTraining'
             def tmp = crmTaskService.list(taskQuery, [:])
-            if(tmp) {
-                ids.addAll(tmp.collect{Long.valueOf(it.ref.split('@')[1])})
+            if (tmp) {
+                ids.addAll(tmp.collect { Long.valueOf(it.ref.split('@')[1]) })
             } else {
                 return new PagedResultList([])
             }
@@ -206,7 +213,7 @@ class CrmTrainingService {
 
     CrmTask getTrainingEvent(String number) {
         def ev = CrmTask.findByNumberAndTenantId(number, TenantUtils.tenant)
-        if(! ev) {
+        if (!ev) {
             ev = CrmTask.findByGuid(number)
         }
         return ev
@@ -231,6 +238,18 @@ class CrmTrainingService {
     CrmTaskAttender addAttender(CrmTask task, Map params) {
         def contactInfo = crmTaskService.createContactInformation(params)
         crmTaskService.addAttender(task, contactInfo, params.status, params.notes ?: (params.description ?: params.msg))
+    }
+
+    /**
+     * Trigger an application event with same topic/name as the current attender status.
+     *
+     * @param attender
+     */
+    void triggerStatusEvent(CrmTaskAttender attender, String newStatus) {
+        final String topic = attender.status.param
+        final Map data = attender.dao
+        data.newStatus = newStatus
+        event(for: "crmTaskAttender", topic: topic, data: data)
     }
 
     List<CrmTask> listTrainingsForContact(final String contactName, final String attenderStatus = null) {
