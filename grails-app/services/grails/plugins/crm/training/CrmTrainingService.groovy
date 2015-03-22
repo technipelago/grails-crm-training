@@ -17,15 +17,14 @@
 package grails.plugins.crm.training
 
 import grails.events.Listener
+import grails.plugins.crm.core.PagedResultList
 import grails.plugins.crm.core.SearchUtils
 import grails.plugins.crm.core.TenantUtils
-import grails.plugins.crm.core.DateUtils
-import grails.plugins.crm.core.PagedResultList
 import grails.plugins.crm.task.CrmTask
 import grails.plugins.crm.task.CrmTaskAttender
+import grails.plugins.selection.Selectable
 import org.apache.commons.lang.StringUtils
 import org.codehaus.groovy.grails.web.metaclass.BindDynamicMethod
-import grails.plugins.selection.Selectable
 
 /**
  * Training services.
@@ -33,7 +32,6 @@ import grails.plugins.selection.Selectable
 class CrmTrainingService {
 
     def crmTaskService
-    def crmCoreService
     def crmTagService
 
     @Listener(namespace = "crmTraining", topic = "enableFeature")
@@ -42,6 +40,8 @@ class CrmTrainingService {
         def tenant = event.tenant
         TenantUtils.withTenant(tenant) {
             crmTagService.createTag(name: CrmTraining.name, multiple: true)
+
+            createTrainingType(name: 'Event', true)
         }
     }
 
@@ -205,7 +205,11 @@ class CrmTrainingService {
     }
 
     CrmTask getTrainingEvent(String number) {
-        CrmTask.findByNumberAndTenantId(number, TenantUtils.tenant)
+        def ev = CrmTask.findByNumberAndTenantId(number, TenantUtils.tenant)
+        if(! ev) {
+            ev = CrmTask.findByGuid(number)
+        }
+        return ev
     }
 
     CrmTask createTrainingEvent(Map params, boolean save = false) {
