@@ -59,7 +59,7 @@ link:../crm-training-ui/index.html[crm-training-ui] plugin.
     def gr8confeu2015 = crmTaskService.createTask(number: 'GR8CONF-EU-2015', name: "GR8Conf EU", type: taskType,
         startTime: startDate, endTime: endDate, displayDate: "June 2nd - 4th, 2015",
         location: "IT-University, Rued Langgards Vej 7, Copenhagen, Denmark", username: 'admin', reference: gr8conf,
-        description: "GR8Conf is an independent, affordable series of conferences in Denmark and the US. It's dedicated to the technologies in the Groovy ecosystem.", true) <4>
+        description: "GR8Conf is an independent, affordable series of conferences in Denmark and the US. It's dedicated to the technologies in the Groovy ecosystem", true) <4>
 
     crmTrainingService.addAttender(gr8confeu2015, [firstName: "Göran", lastName: "Ehrsson", status: "confirmed", tags: ["Speaker"]) <5>
     crmTrainingService.addAttender(gr8confeu2015, [firstName: "Søren", lastName: "Berg Glasius", status: "confirmed", tags: ["Crew", "Speaker"]])
@@ -67,9 +67,9 @@ link:../crm-training-ui/index.html[crm-training-ui] plugin.
 ----
 <1> Create an event type called "Conference"
 <2> Define an event called "GR8Conf EU". This instance holds common metadata for this conference type, no dates or speakers.
-<3> An event instance is really just a +CRMTask+ instance. We create a separate task type "Conference" to separate it from other tasks in our calendar.
+<3> An event instance is really a +CrmTask+ instance. We create a task type "Conference" to easier separate conferences from other tasks in our calendar.
 <4> This creates the specific occurrence of GR8Conf EU in June 2015.
-<5> Add attenders to the conference.
+<5> Add attendees to the conference.
 
 == Changes
 
