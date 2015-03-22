@@ -33,12 +33,13 @@ that focus on one specific domain, for example *contact*, *project* or *document
 == Course Management Plugin
 
 This plugin provides services and persistence for course management in GR8 CRM applications.
-Although the plugin was originally designed for administration of course/training events it
+
+NOTE: Although the plugin was originally designed for administration of course/training events it
 ended up being a very generic plugin capable of managing any type of events where people attend.
 It can be traditional training classes, seminars, small conferences or user group meetings.
 
 This is a "headless" plugin. For event management user interface see the
-https://github.com/technipelago/grails-crm-training-ui.git[crm-training-ui] plugin.
+link:../crm-training-ui/index.html[crm-training-ui] plugin.
 
 == CrmTrainingService
 
