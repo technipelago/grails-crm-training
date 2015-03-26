@@ -47,7 +47,7 @@ class CrmTrainingService {
 
             createTrainingType(name: 'Event', true)
 
-            crmTaskService.createAttenderStatus(orderIndex: 2, param: "confirm",
+            crmTaskService.createAttenderStatus(orderIndex: 1, param: "confirm",
                     name: messageSource.getMessage("crmTaskAttenderStatus.name.confirm", null, "Confirm*", locale), true)
         }
     }
