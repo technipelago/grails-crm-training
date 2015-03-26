@@ -19,9 +19,8 @@ class CrmTrainingRegisterCommand implements Serializable {
     String country
     String email
     String telephone
-    String ice1
-    String ice2
-    String ice3
+    String iceName
+    String icePhone
     String msg
     String[] tags
 
@@ -37,11 +36,10 @@ class CrmTrainingRegisterCommand implements Serializable {
         country(maxSize: 40, nullable: true)
         email(maxSize: 80, blank: false)
         telephone(maxSize: 40, nullable: true)
-        ice1(maxSize: 80, nullable: true)
-        ice2(maxSize: 80, nullable: true)
-        ice3(maxSize: 80, nullable: true)
+        iceName(maxSize: 80, nullable: true)
+        icePhone(maxSize: 40, nullable: true)
         msg(maxSize: 2000, nullable: true, widget: 'textarea')
-        tags(nullable: true)
+        tags(nullable: false)
     }
 
     static transients = ['address']
@@ -74,7 +72,7 @@ class CrmTrainingRegisterCommand implements Serializable {
 
     Map<String, String> asMap() {
         def result = ['number', 'firstName', 'lastName', 'title', 'company', 'address', 'address1', 'postalCode', 'city', 'country',
-                      'email', 'telephone', 'msg', 'ice1', 'ice2', 'ice3'].inject([:]) { map, prop ->
+                      'email', 'telephone', 'msg', 'iceName', 'icePhone'].inject([:]) { map, prop ->
             def value = this[prop]
             if (value != null) {
                 map[prop] = value
