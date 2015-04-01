@@ -237,7 +237,11 @@ class CrmTrainingService {
 
     CrmTaskAttender addAttender(CrmTask task, Map params) {
         def contactInfo = crmTaskService.createContactInformation(params)
-        crmTaskService.addAttender(task, contactInfo, params.status, params.notes ?: (params.description ?: params.msg))
+        def a = crmTaskService.addAttender(task, contactInfo, params.status, params.notes ?: (params.description ?: params.msg))
+        if(params.bookingRef) {
+            a.bookingRef = params.bookingRef
+        }
+        return a
     }
 
     /**
