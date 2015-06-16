@@ -32,6 +32,9 @@ class CrmTraining {
     String name
     String description
     String url
+    Integer maxAttendees // Max attender for this training
+    Integer autoConfirm // Confirm reservations automatically until number of attendees reach above this number
+    Integer overbook // Total number of people to book = maxAttendees + overbook
 
     CrmTrainingType type
 
@@ -41,6 +44,9 @@ class CrmTraining {
         description(maxSize: 2000, nullable: true, widget: 'textarea')
         url(maxSize: 255, nullable: true)
         type()
+        maxAttendees(min: 0, nullable: true)
+        autoConfirm(min: 0, nullable: true)
+        overbook(min: 0, nullable: true)
     }
 
     static mapping = {
@@ -61,7 +67,8 @@ class CrmTraining {
 
     transient Map<String, Object> getDao() {
         [id  : id, number: number, name: name, url: url, description: description, type: type.getDao(),
-         tags: { this.getTagValue() }]
+                maxAttendees: maxAttendees, autoConfirm: autoConfirm, overbook: overbook,
+         tags: { this.getTagValue() }].findAll{it.value != null}
     }
 
     String toString() {
