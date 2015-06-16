@@ -82,6 +82,7 @@ class CrmTrainingRegisterCommand implements Serializable {
         if (tags) {
             result.tags = tags.toList()
         }
+        result.fullAddress = getAddress()
         return result
     }
 }
