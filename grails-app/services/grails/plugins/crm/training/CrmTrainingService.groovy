@@ -32,6 +32,7 @@ import org.codehaus.groovy.grails.web.metaclass.BindDynamicMethod
 class CrmTrainingService {
 
     def crmSecurityService
+    def crmContactService
     def crmTaskService
     def crmTagService
     def messageSource
@@ -235,11 +236,22 @@ class CrmTrainingService {
         crmTaskService.list(query, params)
     }
 
+    /**
+     * Add an attender to an event (CrmTask).
+     * @deprecated Use CrmTaskService#addAttender()
+     * @param task
+     * @param params
+     * @return
+     */
     CrmTaskAttender addAttender(CrmTask task, Map params) {
-        def contactInfo = crmTaskService.createContactInformation(params)
-        def a = crmTaskService.addAttender(task, contactInfo, params.status, params.notes ?: (params.description ?: params.msg))
-        if(params.bookingRef) {
+        def contactInfo = crmContactService.createContactInformation(params)
+        def notes = params.notes ?: (params.description ?: params.msg)
+        def a = crmTaskService.addAttender(task, contactInfo, params.status, notes)
+        if (params.bookingRef) {
             a.bookingRef = params.bookingRef
+        }
+        if (params.externalRef) {
+            a.externalRef = params.externalRef
         }
         return a
     }

@@ -32,9 +32,12 @@ class CrmTraining {
     String name
     String description
     String url
+    String scope // Number of days
     Integer maxAttendees // Max attender for this training
     Integer autoConfirm // Confirm reservations automatically until number of attendees reach above this number
     Integer overbook // Total number of people to book = maxAttendees + overbook
+    Double price
+    Double vat
 
     CrmTrainingType type
 
@@ -43,10 +46,13 @@ class CrmTraining {
         name(maxSize: 255, blank: false)
         description(maxSize: 2000, nullable: true, widget: 'textarea')
         url(maxSize: 255, nullable: true)
+        scope(maxSize: 40, nullable: true)
         type()
         maxAttendees(min: 0, nullable: true)
         autoConfirm(min: 0, nullable: true)
         overbook(min: 0, nullable: true)
+        price(min: -999999d, max: 999999d, scale: 2, nullable: true)
+        vat(min: 0d, max: 1d, scale: 2)
     }
 
     static mapping = {
@@ -55,20 +61,39 @@ class CrmTraining {
         url index: 'crm_training_url_idx'
     }
 
-    static transients = ['dao']
-
     static taggable = true
     static attachmentable = true
     static dynamicProperties = true
     static relatable = true
     static auditable = true
 
-    public static final List BIND_WHITELIST = ['number', 'name', 'description', 'url', 'type']
+    public static final List BIND_WHITELIST = ['number', 'name', 'description', 'url', 'scope', 'type',
+                                               'maxAttendees', 'autoConfirm', 'overbook', 'price', 'vat']
+
+    def beforeValidate() {
+        if(vat == null) {
+            vat = 0
+        }
+    }
+
+    transient Double getPriceVAT() {
+        def p = price ?: 0
+        def v = vat ?: 0
+        return p + (p * v)
+    }
 
     transient Map<String, Object> getDao() {
-        [id  : id, number: number, name: name, url: url, description: description, type: type.getDao(),
-                maxAttendees: maxAttendees, autoConfirm: autoConfirm, overbook: overbook,
-         tags: { this.getTagValue() }].findAll{it.value != null}
+        def info = BIND_WHITELIST.inject([:]) {map, p ->
+            def value = this[p]
+            if(value != null) {
+                map[p] = value
+            }
+            map
+        }
+        info.id = ident()
+        info.type = type?.dao
+        info.tags = getTagValue()
+        info
     }
 
     String toString() {
