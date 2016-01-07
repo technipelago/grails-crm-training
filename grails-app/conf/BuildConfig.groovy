@@ -5,7 +5,7 @@ grails.project.target.level = 1.6
 
 grails.project.fork = [
     //  compile: [maxMemory: 256, minMemory: 64, debug: false, maxPerm: 256, daemon:true],
-    test: false,
+    test: [maxMemory: 768, minMemory: 64, debug: false, maxPerm: 256, forkReserve:false],
     run: [maxMemory: 768, minMemory: 64, debug: false, maxPerm: 256, forkReserve:false],
     war: [maxMemory: 768, minMemory: 64, debug: false, maxPerm: 256, forkReserve:false],
     console: [maxMemory: 768, minMemory: 64, debug: false, maxPerm: 256]
@@ -37,16 +37,25 @@ grails.project.dependency.resolution = {
             export = false
         }
 
-        test(":codenarc:0.22") { export = false }
+        test(":codenarc:0.24.1") { export = false }
         test(":code-coverage:2.0.3-3") { export = false }
 
-        compile ":crm-core:2.4.2-SNAPSHOT"
-        compile ":crm-security:2.4.1"
+        compile ":crm-core:2.4.2"
+        compile ":crm-security:2.4.2"
         compile ":crm-tags:2.4.1"
-        compile ":crm-contact:2.4.1-SNAPSHOT"
-        compile ":crm-task:2.4.2-SNAPSHOT"
+        compile ":crm-contact:2.4.1"
+        compile ":crm-task:2.4.3"
 
-        compile ":sequence-generator:1.1"
+        compile ":sequence-generator:1.2"
         compile ":selection:0.9.8"
+    }
+}
+
+codenarc.reports = {
+    xmlReport('xml') {
+        outputFile = 'target/CodeNarcReport.xml'
+    }
+    htmlReport('html') {
+        outputFile = 'target/CodeNarcReport.html'
     }
 }

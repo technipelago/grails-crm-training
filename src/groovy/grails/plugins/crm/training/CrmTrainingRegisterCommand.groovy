@@ -39,7 +39,7 @@ class CrmTrainingRegisterCommand implements Serializable {
         iceName(maxSize: 80, nullable: true)
         icePhone(maxSize: 40, nullable: true)
         msg(maxSize: 2000, nullable: true, widget: 'textarea')
-        tags(nullable: false)
+        tags(nullable: true)
     }
 
     static transients = ['address']

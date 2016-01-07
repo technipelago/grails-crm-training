@@ -21,6 +21,7 @@ import grails.plugins.crm.core.PagedResultList
 import grails.plugins.crm.core.SearchUtils
 import grails.plugins.crm.core.TenantUtils
 import grails.plugins.crm.task.CrmTask
+import grails.plugins.crm.task.CrmTaskBooking
 import grails.plugins.crm.task.CrmTaskAttender
 import grails.plugins.selection.Selectable
 import org.apache.commons.lang.StringUtils
@@ -213,9 +214,16 @@ class CrmTrainingService {
     }
 
     CrmTask getTrainingEvent(String number) {
-        def ev = CrmTask.findByNumberAndTenantId(number, TenantUtils.tenant)
+        def tenant = TenantUtils.tenant
+        def ev = CrmTask.findByNumberAndTenantId(number, tenant)
         if (!ev) {
-            ev = CrmTask.findByGuid(number)
+            ev = CrmTask.findByGuidAndTenantId(number, tenant)
+            if (!ev && number.isNumber()) {
+                ev = CrmTask.get(Long.valueOf(number))
+            }
+            if (ev?.tenantId != tenant) {
+                ev = null
+            }
         }
         return ev
     }
@@ -234,6 +242,57 @@ class CrmTrainingService {
             query.referenceType = CrmTraining.class
         }
         crmTaskService.list(query, params)
+    }
+
+    /**
+     * Find a booking with a specific booking reference.
+     * @param crmTask the task/activity where bookings are searched
+     * @param bookingReference if null the last created booking will be returned
+     * @return a CrmTaskBooking instance or null if not found
+     */
+    CrmTaskBooking getBooking(CrmTask crmTask, String bookingReference) {
+        CrmTaskBooking.createCriteria().get() {
+            eq('task', crmTask)
+            if (bookingReference) {
+                eq('bookingRef', bookingReference)
+            }
+            order 'dateCreated', 'desc'
+            maxResults 1
+        }
+    }
+
+    /**
+     * Add an attender to an event (CrmTask).
+     * @param params
+     * @return
+     */
+    CrmTaskAttender addAttender(Map params) {
+        def trainingEvent = getTrainingEvent(params.id ?: params.number)
+        if (!trainingEvent) {
+            throw new IllegalArgumentException("No training found with number or id [${params.id ?: params.number}]")
+        }
+        def booking
+        if (params.booking) {
+            booking = getBooking(trainingEvent, params.booking)
+        }
+        if (!booking) {
+            booking = crmTaskService.createBooking(params + [task: trainingEvent], true)
+            if (booking.hasErrors()) {
+                throw new IllegalArgumentException("Cannot create booking with $params due to ${booking.errors.allErrors}")
+            }
+        }
+        def contact = crmContactService.createContactInformation(params)
+        def notes = params.notes ?: (params.description ?: params.msg)
+        def attender = crmTaskService.addAttender(booking, contact, params.status, notes ?: params.msg)
+        if (attender.hasErrors()) {
+            log.error("Cannot register attender with $params due to ${attender.errors.allErrors}")
+        } else {
+            trainingEvent.save(flush: true)
+            def data = attender.getDao()
+            event(for: "crmTaskAttender", topic: "created", data: data)
+            log.debug "Successfully registered attender $attender"
+        }
+        attender
     }
 
     /**
