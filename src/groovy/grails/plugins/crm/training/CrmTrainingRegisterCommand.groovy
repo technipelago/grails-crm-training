@@ -12,6 +12,7 @@ class CrmTrainingRegisterCommand implements Serializable {
     String firstName
     String lastName
     String title
+    String function
     String company
     String address1
     String postalCode
@@ -29,6 +30,7 @@ class CrmTrainingRegisterCommand implements Serializable {
         firstName(maxSize: 40, blank: false)
         lastName(maxSize: 40, blank: false)
         title(maxSize: 40, nullable: true)
+        function(maxSize: 40, nullable: true)
         company(maxSize: 80, nullable: true)
         address1(maxSize: 255, nullable: true)
         postalCode(maxSize: 10, nullable: true)
@@ -71,7 +73,7 @@ class CrmTrainingRegisterCommand implements Serializable {
     }
 
     Map<String, String> asMap() {
-        def result = ['number', 'firstName', 'lastName', 'title', 'company', 'address', 'address1', 'postalCode', 'city', 'country',
+        def result = ['number', 'firstName', 'lastName', 'title', 'function', 'company', 'address', 'address1', 'postalCode', 'city', 'country',
                       'email', 'telephone', 'msg', 'iceName', 'icePhone'].inject([:]) { map, prop ->
             def value = this[prop]
             if (value != null) {
