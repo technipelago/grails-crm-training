@@ -26,7 +26,7 @@ class AttenderStatusJob {
                 }
             }
             for (a in result) {
-                TenantUtils.withTenant(a.task.tenantId) {
+                TenantUtils.withTenant(a.booking.task.tenantId) {
                     crmTrainingService.triggerStatusEvent(a, statusMap[a.status.param])
                 }
             }
