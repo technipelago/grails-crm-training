@@ -17,6 +17,7 @@
 package grails.plugins.crm.training
 
 import grails.events.Listener
+import grails.plugins.crm.core.CrmContactInformation
 import grails.plugins.crm.core.PagedResultList
 import grails.plugins.crm.core.SearchUtils
 import grails.plugins.crm.core.TenantUtils
@@ -26,6 +27,7 @@ import grails.plugins.crm.task.CrmTaskAttender
 import grails.plugins.selection.Selectable
 import org.apache.commons.lang.StringUtils
 import org.codehaus.groovy.grails.web.metaclass.BindDynamicMethod
+import org.grails.databinding.SimpleMapDataBindingSource
 
 /**
  * Training services.
@@ -37,6 +39,7 @@ class CrmTrainingService {
     def crmTaskService
     def crmTagService
     def messageSource
+    def grailsWebDataBinder
 
     @Listener(namespace = "crmTraining", topic = "enableFeature")
     def enableFeature(event) {
@@ -259,6 +262,30 @@ class CrmTrainingService {
             order 'dateCreated', 'desc'
             maxResults 1
         }
+    }
+
+    /**
+     * Add an attender to an event (CrmTask).
+     * @param task the task to add the attender to
+     * @param contact the attender to add
+     * @param params optional attender properties to set
+     * @return the created attender or null if CrmTaskBooking cannot be created
+     */
+    CrmTaskAttender addAttender(CrmTask task, CrmContactInformation contact, Map params) {
+        def booking = crmTaskService.createBooking([task: task, bookingDate: params.bookingDate, bookingRef: params.bookingRef], true)
+        if (booking.hasErrors()) {
+            return null
+        }
+        def notes = params.notes ?: (params.description ?: params.msg)
+        def attender = crmTaskService.addAttender(booking, contact, params.status, notes)
+
+        grailsWebDataBinder.bind(attender, params as SimpleMapDataBindingSource, null, CrmTaskAttender.BIND_WHITELIST, null, null)
+
+        task.save(flush: true)
+
+        event(for: "crmTaskAttender", topic: "created", data: attender.getDao())
+
+        attender
     }
 
     /**
