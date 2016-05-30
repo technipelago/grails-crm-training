@@ -36,6 +36,8 @@ class CrmTraining {
     Integer maxAttendees // Max number of attenders on this training
     Integer autoConfirm // Confirm reservations automatically until number of attendees reach above this number
     Integer overbook // Total number of people to book = maxAttendees + overbook
+    Double price
+    Double vat
 
     CrmTrainingType type
 
@@ -49,6 +51,8 @@ class CrmTraining {
         maxAttendees(min: 0, nullable: true)
         autoConfirm(min: 0, nullable: true)
         overbook(min: 0, nullable: true)
+        price(min: -999999d, max: 999999d, scale: 2, nullable: true)
+        vat(min: 0d, max: 1d, scale: 2)
     }
 
     static mapping = {
@@ -63,12 +67,24 @@ class CrmTraining {
     static auditable = true
 
     public static final List BIND_WHITELIST = ['number', 'name', 'description', 'product', 'scope', 'type',
-                                               'maxAttendees', 'autoConfirm', 'overbook']
+                                               'maxAttendees', 'autoConfirm', 'overbook', 'price', 'vat']
+
+    def beforeValidate() {
+        if (vat == null) {
+            vat = 0
+        }
+    }
+
+    transient Double getPriceVAT() {
+        def p = price ?: 0
+        def v = vat ?: 0
+        return p + (p * v)
+    }
 
     transient Map<String, Object> getDao() {
-        def info = BIND_WHITELIST.inject([:]) {map, p ->
+        def info = BIND_WHITELIST.inject([:]) { map, p ->
             def value = this[p]
-            if(value != null) {
+            if (value != null) {
                 map[p] = value
             }
             map

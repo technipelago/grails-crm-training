@@ -172,6 +172,11 @@ class CrmTrainingService {
         CrmTraining.findByNumberAndTenantId(number, TenantUtils.tenant)
     }
 
+    CrmTraining getTraining(CrmTask task) {
+        def reference = task.reference
+        return (reference instanceof CrmTraining) ? reference : null
+    }
+
     CrmTraining createTraining(Map params, boolean save = false) {
         def tenant = TenantUtils.tenant
         def m = CrmTraining.findByNumberAndTenantId(params.number, tenant)
@@ -232,12 +237,26 @@ class CrmTrainingService {
     }
 
     CrmTask createTrainingEvent(Map params, boolean save = false) {
+        CrmTraining crmTraining
         if (params.training) {
             params.reference = params.training
         }
-        def crmTask = crmTaskService.createTask(params, save)
+        if (params.reference instanceof CrmTraining) {
+            crmTraining = params.reference
+        } else {
+            throw new IllegalArgumentException("No CrmTraining instance found in params")
+        }
+        if (!params.name) {
+            params.name = crmTraining.name
+        }
+        if (params.scope == null) {
+            params.scope = crmTraining.scope
+        }
+        if (params.description == null) {
+            params.description = crmTraining.description
+        }
 
-        return crmTask
+        crmTaskService.createTask(params, save)
     }
 
     List<CrmTask> listTrainingEvents(Map query = [:], Map params = [:]) {
@@ -272,7 +291,7 @@ class CrmTrainingService {
      * @return the created attender or null if CrmTaskBooking cannot be created
      */
     CrmTaskAttender addAttender(CrmTask task, CrmContactInformation contact, Map params) {
-        def booking = crmTaskService.createBooking([task: task, bookingDate: params.bookingDate, bookingRef: params.bookingRef], true)
+        def booking = crmTaskService.createBooking([task: task, bookingDate: params.bookingDate ?: new Date(), bookingRef: params.bookingRef], true)
         if (booking.hasErrors()) {
             return null
         }

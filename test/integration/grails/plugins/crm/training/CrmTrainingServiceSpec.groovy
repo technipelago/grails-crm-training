@@ -19,6 +19,8 @@ class CrmTrainingServiceSpec extends grails.test.spock.IntegrationSpec {
                 maxAttendees: 20,
                 overbook: 5,
                 scope: '2 days',
+                price: 12000,
+                vat: 0.25,
                 true)
 
         then:
@@ -34,5 +36,7 @@ class CrmTrainingServiceSpec extends grails.test.spock.IntegrationSpec {
         dao.maxAttendees == 20
         dao.overbook == 5
         dao.autoConfirm == null
+        dao.price == 12000
+        dao.vat == 0.25
     }
 }
