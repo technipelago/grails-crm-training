@@ -142,22 +142,16 @@ class CrmTrainingService {
                 inList('id', ids)
             }
             if (query.number) {
-                or {
-                    ilike('number', SearchUtils.wildcard(query.number))
-                    ilike('displayNumber', SearchUtils.wildcard(query.number))
-                }
+                ilike('number', SearchUtils.wildcard(query.number))
             }
             if (query.name) {
-                or {
-                    ilike('name', SearchUtils.wildcard(query.name))
-                    ilike('displayName', SearchUtils.wildcard(query.name))
-                }
+                ilike('name', SearchUtils.wildcard(query.name))
             }
             if (query.type) {
                 type {
                     or {
                         ilike('name', SearchUtils.wildcard(query.type))
-                        eq('param', SearchUtils.wildcard(query.type))
+                        eq('param', query.type)
                     }
                 }
             }
