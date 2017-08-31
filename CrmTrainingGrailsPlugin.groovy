@@ -18,7 +18,7 @@ import grails.plugins.crm.training.CrmTraining
 
 class CrmTrainingGrailsPlugin {
     def groupId = ""
-    def version = "2.4.2-SNAPSHOT"
+    def version = "2.4.2"
     def grailsVersion = "2.4 > *"
     def dependsOn = [:]
     def loadAfter = ['crmTags']

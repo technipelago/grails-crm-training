@@ -73,6 +73,7 @@ link:../crm-training-ui/index.html[crm-training-ui] plugin.
 
 == Changes
 
+2.4.2:: Improved query filter for training number, name and type
 2.4.1:: Fixed BLOCKER issue `attender.booking.task` path was wrong. Added properties `scope`, `price` and `vat` on CrmTraining domain class.
 2.4.0:: First public release
 
