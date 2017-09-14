@@ -362,9 +362,19 @@ class CrmTrainingService {
      */
     void triggerStatusEvent(CrmTaskAttender attender, String newStatus) {
         final String topic = attender.status.param
-        final Map data = attender.dao
-        data.newStatus = newStatus
-        event(for: "crmTaskAttender", topic: topic, data: data)
+        final CrmTaskBooking booking = attender.booking
+        final CrmTask task = booking.task
+        final Map model = attender.getDao()
+        model.booking = booking.getDao()
+        model.task = task.getDao()
+        try {
+            model.training = task.reference?.getDao()
+        } catch(Exception e) {
+            log.error(e.message, e)
+        }
+        model.newStatus = newStatus
+
+        event(for: "crmTaskAttender", topic: topic, data: model)
     }
 
     List<CrmTask> listTrainingsForContact(final String contactName, final String attenderStatus = null) {
