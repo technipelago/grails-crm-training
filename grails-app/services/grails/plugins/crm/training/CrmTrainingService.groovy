@@ -367,6 +367,7 @@ class CrmTrainingService {
         final Map model = attender.getDao()
         model.booking = booking.getDao()
         model.task = task.getDao()
+        model.event = model.task
         try {
             model.training = task.reference?.getDao()
         } catch(Exception e) {
