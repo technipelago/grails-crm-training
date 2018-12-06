@@ -7,7 +7,7 @@ import grails.validation.Validateable
  */
 @Validateable
 class CrmTrainingRegisterCommand implements Serializable {
-
+    String branch
     String number
     String firstName
     String lastName
@@ -26,6 +26,7 @@ class CrmTrainingRegisterCommand implements Serializable {
     String[] tags
 
     static constraints = {
+        branch(maxSize: 80, nullable: true)
         number(maxSize: 40, blank: false)
         firstName(maxSize: 40, blank: false)
         lastName(maxSize: 40, blank: false)
@@ -73,7 +74,7 @@ class CrmTrainingRegisterCommand implements Serializable {
     }
 
     Map<String, String> asMap() {
-        def result = ['number', 'firstName', 'lastName', 'title', 'function', 'company', 'address', 'address1', 'postalCode', 'city', 'country',
+        def result = ['branch', 'number', 'firstName', 'lastName', 'title', 'function', 'company', 'address', 'address1', 'postalCode', 'city', 'country',
                       'email', 'telephone', 'msg', 'iceName', 'icePhone'].inject([:]) { map, prop ->
             def value = this[prop]
             if (value != null) {
