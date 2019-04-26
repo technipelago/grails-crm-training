@@ -22,8 +22,10 @@ import grails.plugins.crm.core.PagedResultList
 import grails.plugins.crm.core.SearchUtils
 import grails.plugins.crm.core.TenantUtils
 import grails.plugins.crm.task.CrmTask
+import grails.plugins.crm.task.CrmTaskAttenderStatus
 import grails.plugins.crm.task.CrmTaskBooking
 import grails.plugins.crm.task.CrmTaskAttender
+import grails.plugins.crm.task.CrmTaskType
 import grails.plugins.selection.Selectable
 import org.apache.commons.lang.StringUtils
 import org.codehaus.groovy.grails.web.metaclass.BindDynamicMethod
@@ -52,8 +54,12 @@ class CrmTrainingService {
 
             createTrainingType(name: 'Event', true)
 
-            crmTaskService.createAttenderStatus(orderIndex: 1, param: "confirm",
-                    name: messageSource.getMessage("crmTaskAttenderStatus.name.confirm", null, "Confirm*", locale), true)
+            crmTaskService.createAttenderStatus(orderIndex: 2, param: "registered",
+                    name: messageSource.getMessage("crmTaskAttenderStatus.name.registered", null, "Registered", locale), true)
+            crmTaskService.createAttenderStatus(orderIndex: 3, param: "confirm",
+                    name: messageSource.getMessage("crmTaskAttenderStatus.name.confirm", null, "Confirm *", locale), true)
+            crmTaskService.createAttenderStatus(orderIndex: 4, param: "confirmed",
+                    name: messageSource.getMessage("crmTaskAttenderStatus.name.confirmed", null, "Confirmed", locale), true)
         }
     }
 
@@ -213,6 +219,14 @@ class CrmTrainingService {
             }
         }
         return m
+    }
+
+    CrmTaskType createTaskType(Map params, boolean save = false) {
+        crmTaskService.createTaskType(params, save)
+    }
+
+    CrmTaskAttenderStatus createAttenderStatus(Map params, boolean save = false) {
+        crmTaskService.createAttenderStatus(params, save)
     }
 
     CrmTask getTrainingEvent(String number) {
@@ -396,5 +410,47 @@ class CrmTrainingService {
                 }
             }
         }
+    }
+
+    boolean isBookingPossible(CrmTask event) {
+        CrmTraining training = getTraining(event)
+        if(training == null) {
+            return true // TODO should it be possible if it's not a training event?
+        }
+
+        Integer max = training.maxAttendees
+        if(max == null) {
+            return true
+        }
+
+        if(training.overbook) {
+            max += training.overbook
+        }
+
+        int booked = crmTaskService.countBookedAttenders(event.id)
+        if(booked < max) {
+            return true
+        }
+
+        return false
+    }
+
+    boolean isAutoConfirmPossible(CrmTask event) {
+        CrmTraining training = getTraining(event)
+        if(training == null) {
+            return true // TODO should it be possible if it's not a training event?
+        }
+
+        Integer autoConfirm = training.autoConfirm
+        if(autoConfirm == null) {
+            return false
+        }
+
+        int booked = crmTaskService.countBookedAttenders(event.id)
+        if(booked < autoConfirm) {
+            return true
+        }
+
+        return false
     }
 }
